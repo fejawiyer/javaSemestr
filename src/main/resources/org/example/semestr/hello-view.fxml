@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.VBox?>
-
 <?import javafx.scene.control.Button?>
-<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="org.example.semestr.HelloController">
-  <padding>
-    <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
-  </padding>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
 
-  <Label fx:id="welcomeText"/>
-  <Button text="Hello!" onAction="#onHelloButtonClick"/>
-</VBox>
+<?import javafx.scene.control.TextArea?>
+<AnchorPane minHeight="500.0" minWidth="1000.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.semestr.MainController">
+    <Button layoutX="470.0" fx:id="buttonLogin" layoutY="283.0" mnemonicParsing="false" onAction="#connect" text="Подключиться" />
+    <TextField layoutX="426.0" layoutY="238.0" fx:id="usernameField" />
+    <Label layoutX="452.0" fx:id="helloLabel" layoutY="197.0" text="Введите свой ник" />
+    <Button layoutX="200.0" fx:id="buttonSendMessage" layoutY="500.0" mnemonicParsing="false" onAction="#sendMessage" visible="false" text="Отправить сообщение" />
+    <TextField layoutX="200.0" layoutY="600.0" fx:id="messageField" visible="false"/>
+    <TextArea layoutX="200.0" layoutY="200.0" fx:id="chat" visible="false"/>
+</AnchorPane>
