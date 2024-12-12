@@ -6,11 +6,12 @@
 <?import javafx.scene.layout.AnchorPane?>
 
 <?import javafx.scene.control.TextArea?>
-<AnchorPane minHeight="500.0" minWidth="1000.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.semestr.MainController">
-    <Button layoutX="470.0" fx:id="buttonLogin" layoutY="283.0" mnemonicParsing="false" onAction="#connect" text="Подключиться" />
-    <TextField layoutX="426.0" layoutY="238.0" fx:id="usernameField" />
-    <Label layoutX="452.0" fx:id="helloLabel" layoutY="197.0" text="Введите свой ник" />
-    <Button layoutX="200.0" fx:id="buttonSendMessage" layoutY="500.0" mnemonicParsing="false" onAction="#sendMessage" visible="false" text="Отправить сообщение" />
-    <TextField layoutX="200.0" layoutY="600.0" fx:id="messageField" visible="false"/>
-    <TextArea layoutX="200.0" layoutY="200.0" fx:id="chat" visible="false"/>
+<AnchorPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.semestr.MainController" stylesheets="@style.css">
+    <Label layoutX="50.0" layoutY="40.0" fx:id="helloLabel" text="Введите свой ник" styleClass="label-title" />
+    <TextField fx:id="usernameField" layoutX="50.0" layoutY="80.0" prefWidth="400.0" promptText="Ваш ник" styleClass="text-field" />
+    <Button fx:id="buttonLogin" layoutX="470.0" layoutY="80.0" text="Подключиться" onAction="#connect" styleClass="button-login" />
+    <TextArea fx:id="chat" editable="false" layoutX="50.0" layoutY="150.0" prefWidth="1180.0" prefHeight="400.0" visible="false" styleClass="chat-area" />
+    <TextField fx:id="messageField" layoutX="50.0" layoutY="600.0" prefWidth="1000.0" visible="false" styleClass="text-field" promptText="Введите сообщение" />
+    <Button fx:id="buttonSendMessage" layoutX="1070.0" layoutY="600.0" text="Отправить сообщение" onAction="#sendMessage" visible="false" styleClass="button-send" />
+    <Label fx:id="currentOnline" layoutX="50.0" layoutY="100.0" visible="false" text="Текущий онлайн:"/>
 </AnchorPane>

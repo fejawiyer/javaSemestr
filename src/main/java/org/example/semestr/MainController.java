@@ -26,7 +26,7 @@ public class MainController {
     @FXML
     private Button buttonLogin, buttonSendMessage;
     @FXML
-    private Label helloLabel;
+    private Label helloLabel, currentOnline;
     @FXML
     private TextArea chat;
 
@@ -52,12 +52,18 @@ public class MainController {
             buttonSendMessage.setVisible(true);
             messageField.setVisible(true);
             chat.setVisible(true);
+            currentOnline.setVisible(true);
 
             new Thread(() -> {
                 String serverMessage;
                 try {
                     while ((serverMessage = serverReader.readLine()) != null) {
-                        addMessageToChat(serverMessage);
+                        if (serverMessage.startsWith("/Users")) {
+                            updateOnlineUsers(serverMessage);
+                        }
+                        else {
+                            addMessageToChat(serverMessage);
+                        }
                     }
                 } catch (IOException ex) {
                     System.out.println("Server connection closed: " + ex.getMessage());
@@ -86,5 +92,13 @@ public class MainController {
                 System.out.println("Error sending message: " + e.getMessage());
             }
         }
+    }
+    private void updateOnlineUsers(String countMessage) {
+        javafx.application.Platform.runLater(() -> {
+            String[] users = countMessage.split(": ");
+            if (users.length > 1) {
+                currentOnline.setText("Пользователей: " + users[1]);
+            }
+        });
     }
 }

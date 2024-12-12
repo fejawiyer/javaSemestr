@@ -39,6 +39,7 @@ public class ChatServer {
 
     static void addUser(String username) {
         users.add(username);
+        updateUserCount();
     }
 
     static void broadcast(String message) {
@@ -55,7 +56,14 @@ public class ChatServer {
             }
         }
     }
-
+    public static void updateUserCount() {
+        String userCountMessage = "/Users online: " + users.size();
+        broadcast(userCountMessage);
+    }
+    static void removeUser(String username) {
+        users.remove(username);
+        updateUserCount();
+    }
 }
 
 class ClientHandler extends Thread {
@@ -79,7 +87,7 @@ class ClientHandler extends Thread {
             this.username = reader.readLine();
             logger.info("Client connected with username {}", username);
             ChatServer.addUser(this.username);
-
+            ChatServer.updateUserCount();
             String text;
             do {
                 text = reader.readLine();
