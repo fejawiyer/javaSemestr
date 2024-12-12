@@ -83,6 +83,18 @@ class ClientHandler extends Thread {
              OutputStream output = socket.getOutputStream();
              PrintWriter writer = new PrintWriter(output, true)) {
 
+            String login = reader.readLine();
+            String password = reader.readLine();
+
+            if (!isValidLogin(login, password)) {
+                writer.println("false");
+                socket.close();
+                return;
+            }
+            else {
+                writer.println("true");
+            }
+
             this.writer = writer;
             this.username = reader.readLine();
             logger.info("Client connected with username {}", username);
@@ -157,7 +169,9 @@ class ClientHandler extends Thread {
             writer.println(message);
         }
     }
-
+    private boolean isValidLogin(String login, String password) {
+        return "admin".equals(login) && "12345".equals(password);
+    }
     String getUsername() {
         return username;
     }
