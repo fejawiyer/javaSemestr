@@ -5,7 +5,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.*;
+import java.sql.*;
 import java.util.*;
+
 
 public class ChatServer {
     private static final ConfigReader configReader = ConfigReader.getInstance();
@@ -18,13 +20,21 @@ public class ChatServer {
 
     public static final String commandList = "/help, /list";
 
-    public static void main(String[] args) {
+    private static Connection connection;
+
+    private static Statement stat;
+
+    public static void main(String[] args) throws SQLException {
+        connection = DriverManager.getConnection("jdbc:sqlite:users.db");
+        stat = connection.createStatement();
+        stat.execute("CREATE TABLE if not exists 'users' ('username' INTEGER, 'password' text);");
+
         try (ServerSocket serverSocket = new ServerSocket(configReader.getPort())) {
             logger.info("Waiting for clients...");
             while (true) {
                 Socket socket = serverSocket.accept();
                 logger.info("Client connected");
-                ClientHandler clientHandler = new ClientHandler(socket);
+                ClientHandler clientHandler = new ClientHandler(socket, connection);
                 clientHandlers.add(clientHandler);
                 clientHandler.start();
             }
@@ -37,9 +47,28 @@ public class ChatServer {
         return users;
     }
 
+    static void addUserToDB(String username, String password) {
+        try {
+            logger.info("INSERT INTO 'users' ('username', 'password') VALUES('{}', '{}');", username, password);
+            stat.execute("INSERT INTO 'users' ('username', 'password') VALUES('" + username + "', '" + password + "');");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        users.add(username);
+        updateUserCount();
+    }
     static void addUser(String username) {
         users.add(username);
         updateUserCount();
+    }
+    public static void select() throws SQLException {
+        ResultSet sel = stat.executeQuery("SELECT * FROM users");
+        while(sel.next()) {
+            String name = sel.getString("username");
+            String password = sel.getString("password");
+            System.out.println("username = " + name);
+            System.out.println("password = " + password);
+        }
     }
 
     static void broadcast(String message) {
@@ -70,11 +99,13 @@ class ClientHandler extends Thread {
     private final Socket socket;
     private PrintWriter writer;
     private String username;
-
+    private final Connection connection;
     private static final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
 
-    public ClientHandler(Socket socket) {
+
+    public ClientHandler(Socket socket, Connection connection) throws SQLException {
         this.socket = socket;
+        this.connection = connection;
     }
 
     public void run() {
@@ -82,21 +113,30 @@ class ClientHandler extends Thread {
              BufferedReader reader = new BufferedReader(new InputStreamReader(input));
              OutputStream output = socket.getOutputStream();
              PrintWriter writer = new PrintWriter(output, true)) {
-
+            ChatServer.select();
+            String type = reader.readLine();
             String login = reader.readLine();
             String password = reader.readLine();
 
-            if (!isValidLogin(login, password)) {
-                writer.println("false");
-                socket.close();
-                return;
-            }
-            else {
-                writer.println("true");
-            }
+            if(type.equals("login")) {
+                if (!isValidLogin(login, password)) {
+                    writer.println("false");
+                    socket.close();
+                    return;
+                } else {
+                    writer.println("true");
+                }
 
-            this.writer = writer;
-            this.username = reader.readLine();
+                this.writer = writer;
+                this.username = login;
+            }
+            if(type.equals("register")) {
+                writer.println("true");
+                this.writer = writer;
+                this.username = login;
+                logger.info("Register username:{}, password:{}", this.username, password);
+                ChatServer.addUserToDB(this.username, password);
+            }
             logger.info("Client connected with username {}", username);
             ChatServer.addUser(this.username);
             ChatServer.updateUserCount();
@@ -146,17 +186,19 @@ class ClientHandler extends Thread {
                     }
 
                 } else {
-                    logger.info("Broadcast message {} from {}", text, username);
+                    if (!text.equals("aA11231231231Aa554432657dfght675esfd")) {
+                        logger.info("Broadcast message {} from {}", text, username);
 
-                    if (text.equals("null"))
-                        logger.warn("Null message received");
+                        if (text.equals("null"))
+                            logger.warn("Null message received");
 
-                    ChatServer.broadcast(username + ": " + text);
+                        ChatServer.broadcast(username + ": " + text);
+                    }
                 }
-            } while (!text.equalsIgnoreCase("exit"));
+            } while (!text.equalsIgnoreCase("aA11231231231Aa554432657dfght675esfd"));
 
             socket.close();
-        } catch (IOException ex) {
+        } catch (IOException | SQLException ex) {
             System.out.println("Server exception: " + ex.getMessage());
         } finally {
             ChatServer.clientHandlers.remove(this);
@@ -169,8 +211,16 @@ class ClientHandler extends Thread {
             writer.println(message);
         }
     }
-    private boolean isValidLogin(String login, String password) {
-        return "admin".equals(login) && "12345".equals(password);
+    private boolean isValidLogin(String login, String password) throws SQLException {
+        Statement stat = connection.createStatement();
+        ResultSet res = stat.executeQuery("SELECT * FROM USERS WHERE USERNAME = '" + login + "'");
+        System.out.println("SELECT * FROM USERS WHERE USERNAME = '" + login + "'");
+        String passCheck = "";
+        while(res.next()) {
+            passCheck = res.getString("password");
+            System.out.println(passCheck);
+        }
+        return passCheck.equals(password);
     }
     String getUsername() {
         return username;

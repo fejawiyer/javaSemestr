@@ -1,5 +1,6 @@
 package org.example.semestr;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
@@ -10,6 +11,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Objects;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 public class MainController {
     private static final ConfigReader reader = ConfigReader.getInstance();
@@ -21,10 +23,12 @@ public class MainController {
 
     private String login, password;
 
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
     @FXML
     private TextField messageField, loginField;
     @FXML
-    private Button buttonLogin, buttonSendMessage;
+    private Button buttonLogin, buttonSendMessage, buttonExit, buttonRegister;
     @FXML
     private Label loginLabel, registerLabel, currentOnline;
     @FXML
@@ -40,9 +44,6 @@ public class MainController {
         System.out.println(password);
         username = login;
         go();
-    }
-    @FXML
-    protected void register() {
     }
     private void go() {
         try {
@@ -66,11 +67,13 @@ public class MainController {
             registerLabel.setVisible(false);
             passwordField.setVisible(false);
             loginField.setVisible(false);
+            buttonRegister.setVisible(false);
 
             buttonSendMessage.setVisible(true);
             messageField.setVisible(true);
             chat.setVisible(true);
             currentOnline.setVisible(true);
+            buttonExit.setVisible(true);
 
             new Thread(() -> {
                 String serverMessage;
@@ -96,6 +99,7 @@ public class MainController {
     }
     private void login() {
         try {
+            writer.println("login");
             writer.println(login);
             writer.println(password);
         } catch (Exception e) {
@@ -126,5 +130,23 @@ public class MainController {
                 currentOnline.setText("Пользователей: " + users[1]);
             }
         });
+    }
+    @FXML
+    private void exit() {
+        writer.println("aA11231231231Aa554432657dfght675esfd");
+        Platform.exit();
+    }
+    @FXML
+    private void register() throws IOException {
+        socket = new Socket(reader.getHost(), reader.getPort());
+        writer = new PrintWriter(socket.getOutputStream(), true);
+        serverReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        try {
+            writer.println("register");
+            writer.println(login);
+            writer.println(password);
+        } catch (Exception e) {
+            System.out.println("Error sending message: " + e.getMessage());
+        }
     }
 }

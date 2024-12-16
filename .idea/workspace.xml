@@ -6,10 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="60b5f00d-2cd3-48f4-857f-79126133a4a9" name="Changes" comment="v3">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/module-info.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/module-info.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/semestr/ChatServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/semestr/ChatServer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/semestr/MainController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/semestr/MainController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/org/example/semestr/hello-view.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/org/example/semestr/hello-view.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/org/example/semestr/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/org/example/semestr/style.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,12 +38,12 @@
     &quot;assignee&quot;: &quot;fejawiyer&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/fejawiyer/javaSemestr&quot;,
-    &quot;accountId&quot;: &quot;3f509edf-6c47-4d38-99d8-e6cd865c70e5&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/fejawiyer/javaSemestr/",
+    "accountId": "ae0233f8-e0f2-40b1-9453-ea152ab762a6"
   }
-}</component>
+}]]></component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -73,7 +74,8 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "dev",
     "kotlin-language-version-configured": "true",
-    "project.structure.last.edited": "SDKs",
+    "last_opened_file_path": "C:/Users/Евген/Desktop/sqlite-jdbc-3.47.1.0.jar",
+    "project.structure.last.edited": "Global Libraries",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
     "settings.editor.selected.configurable": "preferences.JavaFX"
