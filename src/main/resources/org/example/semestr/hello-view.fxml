@@ -14,11 +14,12 @@
 
     <Button fx:id="buttonRegister" layoutX="470.0" layoutY="200.0" text="Зарегистрироваться" onAction="#register" styleClass="button-register"/>
 
-    <Button fx:id="buttonLogin" layoutX="470.0" layoutY="80.0" text="Подключиться" onAction="#connect"  />
+    <Button fx:id="buttonLogin" layoutX="470.0" layoutY="80.0" text="Подключиться" onAction="#login"  />
 
-    <TextArea fx:id="chat" editable="false" layoutX="50.0" layoutY="150.0" prefWidth="1180.0" prefHeight="400.0" visible="false" />
+    <TextArea fx:id="chat" editable="false" layoutX="50.0" layoutY="150.0" prefWidth="1000.0" prefHeight="400.0" visible="false" />
     <TextField fx:id="messageField" layoutX="50.0" layoutY="600.0" prefWidth="1000.0" visible="false" styleClass="text-field" promptText="Введите сообщение" />
-    <Button fx:id="buttonSendMessage" layoutX="1070.0" layoutY="600.0" text="Отправить сообщение" onAction="#sendMessage" visible="false"  />
-    <Label fx:id="currentOnline" layoutX="50.0" layoutY="100.0" visible="false" text="Текущий онлайн:" />
+    <Button fx:id="buttonSendMessage" layoutX="1070.0" layoutY="600.0" text="Отправить сообщение" onAction="#sendMessage" visible="false" />
+    <Label fx:id="currentOnline" layoutX="1070.0" layoutY="125.0" visible="false" text="Текущий онлайн:" />
+    <Label fx:id="usersList" layoutX="1070.0" layoutY="150.0" visible="false"/>
     <Button fx:id="buttonExit" layoutX="1070.0" layoutY="640.0" text="Выйти" onAction="#exit" visible="false"/>
 </AnchorPane>

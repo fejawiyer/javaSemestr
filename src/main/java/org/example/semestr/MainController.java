@@ -15,13 +15,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 public class MainController {
     private static final ConfigReader reader = ConfigReader.getInstance();
-    private String username;
 
-    private Socket socket;
     private PrintWriter writer;
     private BufferedReader serverReader;
 
-    private String login, password;
+    private String connectionType;
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
@@ -30,30 +28,39 @@ public class MainController {
     @FXML
     private Button buttonLogin, buttonSendMessage, buttonExit, buttonRegister;
     @FXML
-    private Label loginLabel, registerLabel, currentOnline;
+    private Label loginLabel, registerLabel, currentOnline, usersList;
     @FXML
     private TextArea chat;
     @FXML
     private PasswordField passwordField;
 
-    @FXML
-    protected void connect() {
-        login = loginField.getText();
-        password = passwordField.getText();
-        System.out.println(login);
-        System.out.println(password);
-        username = login;
-        go();
-    }
     private void go() {
         try {
-            socket = new Socket(reader.getHost(), reader.getPort());
+            Socket socket = new Socket(reader.getHost(), reader.getPort());
             writer = new PrintWriter(socket.getOutputStream(), true);
             serverReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            login();
+            String login = loginField.getText();
+            String password = passwordField.getText();
+            System.out.println(login);
+            System.out.println(password);
 
-            System.out.println("Connected to the chat server");
+            if (connectionType.equals("login")) {
+                try {
+                    writer.println("login");
+                } catch (Exception e) {
+                    showError("Ошибка при подключении " + e.getMessage());
+                }
+            }
+            else {
+                try {
+                    writer.println("register");
+                } catch (Exception e) {
+                    showError("Ошибка при подключении " + e.getMessage());
+                }
+            }
+            writer.println(login);
+            writer.println(password);
 
             String loginMsg = serverReader.readLine();
 
@@ -61,6 +68,8 @@ public class MainController {
                 socket.close();
                 return;
             }
+
+            showInfo("Успешно подключение к серверу");
 
             buttonLogin.setVisible(false);
             loginLabel.setVisible(false);
@@ -74,6 +83,7 @@ public class MainController {
             chat.setVisible(true);
             currentOnline.setVisible(true);
             buttonExit.setVisible(true);
+            usersList.setVisible(true);
 
             new Thread(() -> {
                 String serverMessage;
@@ -87,24 +97,20 @@ public class MainController {
                         }
                     }
                 } catch (IOException ex) {
-                    System.out.println("Server connection closed: " + ex.getMessage());
+                    showError("Сервер закрыл соединение. " + ex.getMessage());
                 }
             }).start();
 
         } catch (UnknownHostException ex) {
-            System.out.println("Server not found: " + ex.getMessage());
+            showError("Сервер не найден. " + ex.getMessage());
         } catch (IOException ex) {
-            System.out.println("I/O error: " + ex.getMessage());
+            showError("I/O ошибка. " + ex.getMessage());
         }
     }
+    @FXML
     private void login() {
-        try {
-            writer.println("login");
-            writer.println(login);
-            writer.println(password);
-        } catch (Exception e) {
-            System.out.println("Error sending message: " + e.getMessage());
-        }
+        connectionType = "login";
+        go();
     }
     private void addMessageToChat(String message) {
         javafx.application.Platform.runLater(() -> {
@@ -127,7 +133,7 @@ public class MainController {
         javafx.application.Platform.runLater(() -> {
             String[] users = countMessage.split(": ");
             if (users.length > 1) {
-                currentOnline.setText("Пользователей: " + users[1]);
+                currentOnline.setText("Пользователей в сети: " + users[1]);
             }
         });
     }
@@ -137,16 +143,35 @@ public class MainController {
         Platform.exit();
     }
     @FXML
-    private void register() throws IOException {
-        socket = new Socket(reader.getHost(), reader.getPort());
-        writer = new PrintWriter(socket.getOutputStream(), true);
-        serverReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        try {
-            writer.println("register");
-            writer.println(login);
-            writer.println(password);
-        } catch (Exception e) {
-            System.out.println("Error sending message: " + e.getMessage());
-        }
+    private void register() {
+        connectionType = "register";
+        go();
+    }
+    @FXML
+    private void initialize() {
+        messageField.setOnAction(event -> sendMessage());
+    }
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Ошибка");
+        alert.setHeaderText("Произошла ошибка");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showWarning(String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Предупреждение");
+        alert.setHeaderText("Предупреждение");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showInfo(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Информация");
+        alert.setHeaderText("Информационное сообщение");
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

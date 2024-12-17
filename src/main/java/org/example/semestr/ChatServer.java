@@ -7,7 +7,7 @@ import java.io.*;
 import java.net.*;
 import java.sql.*;
 import java.util.*;
-
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 public class ChatServer {
     private static final ConfigReader configReader = ConfigReader.getInstance();
@@ -23,6 +23,8 @@ public class ChatServer {
     private static Connection connection;
 
     private static Statement stat;
+
+    public static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     public static void main(String[] args) throws SQLException {
         connection = DriverManager.getConnection("jdbc:sqlite:users.db");
@@ -49,13 +51,13 @@ public class ChatServer {
 
     static void addUserToDB(String username, String password) {
         try {
+            password = encoder.encode(password);
             logger.info("INSERT INTO 'users' ('username', 'password') VALUES('{}', '{}');", username, password);
             stat.execute("INSERT INTO 'users' ('username', 'password') VALUES('" + username + "', '" + password + "');");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         users.add(username);
-        updateUserCount();
     }
     static void addUser(String username) {
         users.add(username);
@@ -113,7 +115,6 @@ class ClientHandler extends Thread {
              BufferedReader reader = new BufferedReader(new InputStreamReader(input));
              OutputStream output = socket.getOutputStream();
              PrintWriter writer = new PrintWriter(output, true)) {
-            ChatServer.select();
             String type = reader.readLine();
             String login = reader.readLine();
             String password = reader.readLine();
@@ -141,8 +142,12 @@ class ClientHandler extends Thread {
             ChatServer.addUser(this.username);
             ChatServer.updateUserCount();
             String text;
+
             do {
                 text = reader.readLine();
+                if (text.equalsIgnoreCase("aA11231231231Aa554432657dfght675esfd")) {
+                    ChatServer.removeUser(username);
+                }
                 if (text.startsWith("/")) {
                     String command = text.substring(1);
                     logger.info("User {} entered /{} command", username, command);
@@ -214,13 +219,12 @@ class ClientHandler extends Thread {
     private boolean isValidLogin(String login, String password) throws SQLException {
         Statement stat = connection.createStatement();
         ResultSet res = stat.executeQuery("SELECT * FROM USERS WHERE USERNAME = '" + login + "'");
-        System.out.println("SELECT * FROM USERS WHERE USERNAME = '" + login + "'");
+        logger.info("SELECT * FROM USERS WHERE USERNAME = '{}'", login);
         String passCheck = "";
         while(res.next()) {
             passCheck = res.getString("password");
-            System.out.println(passCheck);
         }
-        return passCheck.equals(password);
+        return ChatServer.encoder.matches(password, passCheck);
     }
     String getUsername() {
         return username;
