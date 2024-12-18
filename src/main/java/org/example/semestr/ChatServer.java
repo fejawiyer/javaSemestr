@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.net.*;
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -29,8 +31,9 @@ public class ChatServer {
     public static void main(String[] args) throws SQLException {
         connection = DriverManager.getConnection("jdbc:sqlite:users.db");
         stat = connection.createStatement();
-        stat.execute("CREATE TABLE if not exists 'users' ('username' INTEGER, 'password' text);");
-
+        stat.execute("CREATE TABLE if not exists 'users' ('username' text, 'password' text);");
+        stat.execute("CREATE TABLE if not exists 'bc_message' ('time' text, 'username' text, 'message' text);");
+        stat.execute("CREATE TABLE if not exists 'message' ('time' text, 'recipient' text, 'donor' text, 'message' text);");
         try (ServerSocket serverSocket = new ServerSocket(configReader.getPort())) {
             logger.info("Waiting for clients...");
             while (true) {
@@ -57,11 +60,9 @@ public class ChatServer {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        users.add(username);
     }
     static void addUser(String username) {
         users.add(username);
-        updateUserCount();
     }
     public static void select() throws SQLException {
         ResultSet sel = stat.executeQuery("SELECT * FROM users");
@@ -74,26 +75,52 @@ public class ChatServer {
     }
 
     static void broadcast(String message) {
+        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        String messageWithTime = "[" + time + "] " + message;
         for (ClientHandler clientHandler : clientHandlers) {
-            clientHandler.sendMessage(message);
+            clientHandler.sendMessage(messageWithTime);
         }
     }
 
     static void sendMessageToUser(String message, String username) {
+        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        String messageWithTime = "[" + time + "] " + message;
         for (ClientHandler clientHandler : clientHandlers) {
             if (clientHandler.getUsername().equals(username)) {
-                clientHandler.sendMessage(message);
+                clientHandler.sendMessage(messageWithTime);
                 break;
             }
         }
     }
     public static void updateUserCount() {
-        String userCountMessage = "/Users online: " + users.size();
-        broadcast(userCountMessage);
+        StringBuilder userCountMessage = new StringBuilder("/Users online: " + users.size() + " ");
+        for (int i = 0; i < users.size(); i++) {
+            userCountMessage.append(users.get(i)).append(" ");
+        }
+        userCountMessage = new StringBuilder(userCountMessage.substring(0, userCountMessage.length() - 1));
+        broadcast(userCountMessage.toString());
     }
     static void removeUser(String username) {
         users.remove(username);
         updateUserCount();
+    }
+    static void insertBCMSG(String text, String username) {
+        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        try {
+            logger.info("INSERT INTO 'bc_message' ('time', 'username', 'message') VALUES('{}', '{}', '{}');", time,  username, text);
+            stat.execute("INSERT INTO 'bc_message' ('time', 'username', 'message') VALUES('" + time + "', '" + username + "', '" + text + "');");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    static void insertMSG(String text, String donor, String recipient) {
+        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        try {
+            logger.info("INSERT INTO 'message' ('time', 'recipient', 'donor', 'message') VALUES('{}', '{}', '{}', '{}');", time,  recipient, donor, text);
+            stat.execute("INSERT INTO 'message' ('time', 'recipient', 'donor', 'message') VALUES('" + time + "', '" + recipient + "', '" + donor + "', '"+ text + "');");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 
@@ -148,21 +175,6 @@ class ClientHandler extends Thread {
                 if (text.equalsIgnoreCase("aA11231231231Aa554432657dfght675esfd")) {
                     ChatServer.removeUser(username);
                 }
-                if (text.startsWith("/")) {
-                    String command = text.substring(1);
-                    logger.info("User {} entered /{} command", username, command);
-                    if (command.equals("help")) {
-                        ChatServer.sendMessageToUser(ChatServer.commandList, username);
-                    }
-                    else if (command.equals("list")) {
-                        ChatServer.sendMessageToUser(ChatServer.getUsers().toString(), username);
-                    }
-                    else {
-                        logger.warn("Command {} not found", command);
-                        ChatServer.sendMessageToUser("Command not found", username);
-                    }
-                }
-
                 else if (text.startsWith("@")) {
                     int spaceIndex = text.indexOf(' ');
                     String recipient;
@@ -187,7 +199,9 @@ class ClientHandler extends Thread {
                         ChatServer.sendMessageToUser("User " + recipient + " is not exists", username);
                     }
                     else {
+                        message = " [private] " + username + ": " +message;
                         ChatServer.sendMessageToUser(message, recipient);
+                        ChatServer.insertMSG(message, recipient, username);
                     }
 
                 } else {
@@ -197,6 +211,7 @@ class ClientHandler extends Thread {
                         if (text.equals("null"))
                             logger.warn("Null message received");
 
+                        ChatServer.insertBCMSG(text, username);
                         ChatServer.broadcast(username + ": " + text);
                     }
                 }

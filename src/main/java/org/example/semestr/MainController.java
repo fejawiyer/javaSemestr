@@ -10,6 +10,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -20,6 +23,8 @@ public class MainController {
     private BufferedReader serverReader;
 
     private String connectionType;
+
+    private final ArrayList<String> users = new ArrayList<>();
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
@@ -87,9 +92,11 @@ public class MainController {
 
             new Thread(() -> {
                 String serverMessage;
+                String[] parts;
                 try {
                     while ((serverMessage = serverReader.readLine()) != null) {
-                        if (serverMessage.startsWith("/Users")) {
+                        parts = serverMessage.split(" ");
+                        if (parts[1].startsWith("/Users")) {
                             updateOnlineUsers(serverMessage);
                         }
                         else {
@@ -131,12 +138,22 @@ public class MainController {
     }
     private void updateOnlineUsers(String countMessage) {
         javafx.application.Platform.runLater(() -> {
-            String[] users = countMessage.split(": ");
-            if (users.length > 1) {
-                currentOnline.setText("Пользователей в сети: " + users[1]);
+            String[] parts = countMessage.split("online: ");
+            if (parts.length > 1) {
+                String[] usersInfo = parts[1].trim().split(" ");
+                currentOnline.setText("Пользователей в сети: " + usersInfo[0]);
+
+                if(!users.isEmpty()) {
+                    users.clear();
+                }
+
+                users.addAll(Arrays.asList(usersInfo).subList(1, usersInfo.length));
+                String usersText = String.join("\n", users);
+                usersList.setText(usersText);
             }
         });
     }
+
     @FXML
     private void exit() {
         writer.println("aA11231231231Aa554432657dfght675esfd");
