@@ -189,11 +189,6 @@ public class MainController {
     @FXML
     private void initialize() {
         messageField.setOnAction(event -> sendMessage());
-        Platform.runLater(() -> {
-            javafx.stage.Stage stage = (javafx.stage.Stage) messageField.getScene().getWindow();
-            stage.setOnCloseRequest(event -> {event.consume(); exit();
-            });
-        });
     }
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
