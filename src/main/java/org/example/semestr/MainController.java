@@ -12,9 +12,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import com.google.gson.Gson;
 
 public class MainController {
     private static final ConfigReader reader = ConfigReader.getInstance();
@@ -25,8 +24,6 @@ public class MainController {
     private String connectionType;
 
     private final ArrayList<String> users = new ArrayList<>();
-
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     @FXML
     private TextField messageField, loginField;
@@ -47,8 +44,6 @@ public class MainController {
 
             String login = loginField.getText();
             String password = passwordField.getText();
-            System.out.println(login);
-            System.out.println(password);
 
             if (connectionType.equals("login")) {
                 try {
@@ -92,15 +87,24 @@ public class MainController {
 
             new Thread(() -> {
                 String serverMessage;
-                String[] parts;
+                Gson gson = new Gson();
                 try {
                     while ((serverMessage = serverReader.readLine()) != null) {
-                        parts = serverMessage.split(" ");
-                        if (parts[1].startsWith("/Users")) {
-                            updateOnlineUsers(serverMessage);
-                        }
-                        else {
-                            addMessageToChat(serverMessage);
+                        try {
+                            Message message = gson.fromJson(serverMessage, Message.class);
+                            System.out.println(message);
+                            System.out.println(message.getText());
+                            if (message.getText().startsWith("/Users")) {
+                                System.out.println("Server send /users");
+                                updateOnlineUsers(message.getText());
+                            } else if (message.getText().startsWith("[private")) {
+                                addPrivateMessageToChat(message);
+                            }
+                            else {
+                                addMessageToChat(message);
+                            }
+                        } catch (Exception e) {
+                            showError("Ошибка. " + e.getMessage());
                         }
                     }
                 } catch (IOException ex) {
@@ -119,9 +123,16 @@ public class MainController {
         connectionType = "login";
         go();
     }
-    private void addMessageToChat(String message) {
+    private void addMessageToChat(Message message) {
         javafx.application.Platform.runLater(() -> {
-            chat.appendText(message + "\n");
+            String formattedMSG= "[" + message.getTime() + "] " + message.getUsername() + ": " + message.getText();
+            chat.appendText(formattedMSG + "\n");
+        });
+    }
+    private void addPrivateMessageToChat(Message message) {
+        javafx.application.Platform.runLater(() -> {
+            String formattedMSG= "[" + message.getTime() + "]" + message.getText();
+            chat.appendText(formattedMSG + "\n");
         });
     }
     @FXML
@@ -129,7 +140,11 @@ public class MainController {
         String message = messageField.getText();
         if (message != null && !message.isEmpty()) {
             try {
-                writer.println(message);
+                Message msg = new Message(loginField.getText(), message, null);
+                Gson gson = new Gson();
+                String jsonMSG = gson.toJson(msg);
+
+                writer.println(jsonMSG);
                 messageField.clear();
             } catch (Exception e) {
                 System.out.println("Error sending message: " + e.getMessage());
@@ -156,7 +171,7 @@ public class MainController {
 
     @FXML
     private void exit() {
-        writer.println("aA11231231231Aa554432657dfght675esfd");
+        writer.println("e596899f114b5162402325dfb31fdaa792fabed718628336cc7a35a24f38eaa9");
         Platform.exit();
     }
     @FXML
@@ -176,18 +191,11 @@ public class MainController {
         alert.showAndWait();
     }
 
-    private void showWarning(String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Предупреждение");
-        alert.setHeaderText("Предупреждение");
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
     private void showInfo(String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Информация");
         alert.setHeaderText("Информационное сообщение");
+        alert.setContentText(message);
         alert.setContentText(message);
         alert.showAndWait();
     }

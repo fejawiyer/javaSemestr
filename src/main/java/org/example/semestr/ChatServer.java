@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import com.google.gson.Gson;
 
 public class ChatServer {
     private static final ConfigReader configReader = ConfigReader.getInstance();
@@ -20,20 +21,24 @@ public class ChatServer {
 
     private static final ArrayList<String> users = new ArrayList<>();
 
-    public static final String commandList = "/help, /list";
-
-    private static Connection connection;
-
     private static Statement stat;
 
     public static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-    public static void main(String[] args) throws SQLException {
-        connection = DriverManager.getConnection("jdbc:sqlite:users.db");
-        stat = connection.createStatement();
-        stat.execute("CREATE TABLE if not exists 'users' ('username' text, 'password' text);");
-        stat.execute("CREATE TABLE if not exists 'bc_message' ('time' text, 'username' text, 'message' text);");
-        stat.execute("CREATE TABLE if not exists 'message' ('time' text, 'recipient' text, 'donor' text, 'message' text);");
+    public static void main(String[] args) throws DatabaseConnectionException {
+        Connection connection;
+        try {
+            logger.info("Trying to connect database...");
+            connection = DriverManager.getConnection("jdbc:sqlite:database.db");
+            logger.info("Success connect to database.");
+            stat = connection.createStatement();
+            stat.execute("CREATE TABLE if not exists 'users' ('username' text unique, 'password' text);");
+            stat.execute("CREATE TABLE if not exists 'bc_message' ('time' text, 'username' text, 'message' text);");
+            stat.execute("CREATE TABLE if not exists 'message' ('time' text, 'recipient' text, 'donor' text, 'message' text);");
+        } catch (SQLException e) {
+            logger.error("Failed connect to database. ");
+            throw new DatabaseConnectionException("Failed connect to database. ");
+        }
         try (ServerSocket serverSocket = new ServerSocket(configReader.getPort())) {
             logger.info("Waiting for clients...");
             while (true) {
@@ -64,6 +69,7 @@ public class ChatServer {
     static void addUser(String username) {
         users.add(username);
     }
+
     public static void select() throws SQLException {
         ResultSet sel = stat.executeQuery("SELECT * FROM users");
         while(sel.next()) {
@@ -74,36 +80,57 @@ public class ChatServer {
         }
     }
 
-    static void broadcast(String message) {
-        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-        String messageWithTime = "[" + time + "] " + message;
-        for (ClientHandler clientHandler : clientHandlers) {
-            clientHandler.sendMessage(messageWithTime);
+    static void broadcastByServer(String message) {
+        Message msg = new Message(message);
+        logger.info("Server broadcast: {}", msg.getText());
+        logger.info("{}", msg);
+        try {
+            for (ClientHandler clientHandler : clientHandlers) {
+                clientHandler.sendMessageFromServer(msg);
+            }
+        } catch (Exception e) {
+            logger.error("Error while broadcast: {}", e.getMessage());
+        }
+    }
+    static void broadcast(String username, String message) {
+        Message msg = new Message(username, message);
+        logger.info("broadcast: {}", msg.getText());
+        logger.info("{}", msg);
+        try {
+            for (ClientHandler clientHandler : clientHandlers) {
+                clientHandler.sendMessageFromServer(msg);
+            }
+        } catch (Exception e) {
+            logger.error("Error while broadcast: {}", e.getMessage());
         }
     }
 
-    static void sendMessageToUser(String message, String username) {
-        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-        String messageWithTime = "[" + time + "] " + message;
-        for (ClientHandler clientHandler : clientHandlers) {
-            if (clientHandler.getUsername().equals(username)) {
-                clientHandler.sendMessage(messageWithTime);
-                break;
+    static void sendMessageToUser(String message, String username, String recipient) {
+        Message msg = new Message(username, message);
+        try {for (ClientHandler clientHandler : clientHandlers) {
+                if (clientHandler.getUsername().equals(recipient)) {
+                    clientHandler.sendMessage(msg);
+                    break;
+                }
             }
+        } catch (Exception e) {
+            logger.error("Error sending message to {}: {}", username, e.getMessage());
         }
     }
     public static void updateUserCount() {
         StringBuilder userCountMessage = new StringBuilder("/Users online: " + users.size() + " ");
-        for (int i = 0; i < users.size(); i++) {
-            userCountMessage.append(users.get(i)).append(" ");
+        for (String user : users) {
+            userCountMessage.append(user).append(" ");
         }
         userCountMessage = new StringBuilder(userCountMessage.substring(0, userCountMessage.length() - 1));
-        broadcast(userCountMessage.toString());
+        broadcastByServer(userCountMessage.toString());
     }
+
     static void removeUser(String username) {
         users.remove(username);
         updateUserCount();
     }
+
     static void insertBCMSG(String text, String username) {
         String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
         try {
@@ -132,7 +159,7 @@ class ClientHandler extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
 
 
-    public ClientHandler(Socket socket, Connection connection) throws SQLException {
+    public ClientHandler(Socket socket, Connection connection) {
         this.socket = socket;
         this.connection = connection;
     }
@@ -168,11 +195,13 @@ class ClientHandler extends Thread {
             logger.info("Client connected with username {}", username);
             ChatServer.addUser(this.username);
             ChatServer.updateUserCount();
+            Message msg;
             String text;
-
+            Gson gson = new Gson();
             do {
-                text = reader.readLine();
-                if (text.equalsIgnoreCase("aA11231231231Aa554432657dfght675esfd")) {
+                msg = gson.fromJson(reader.readLine(), Message.class);
+                text = msg.getText();
+                if (text.equalsIgnoreCase("e596899f114b5162402325dfb31fdaa792fabed718628336cc7a35a24f38eaa9")) {
                     ChatServer.removeUser(username);
                 }
                 else if (text.startsWith("@")) {
@@ -196,26 +225,26 @@ class ClientHandler extends Thread {
 
                     if (!ChatServer.getUsers().contains(recipient)) {
                         logger.warn("Recipient {} is not exists", recipient);
-                        ChatServer.sendMessageToUser("User " + recipient + " is not exists", username);
+                        ChatServer.sendMessageToUser("SERVER:User " + recipient + " is not exists", username, username);
                     }
                     else {
-                        message = " [private] " + username + ": " +message;
-                        ChatServer.sendMessageToUser(message, recipient);
+                        message = "[private] " + username + ": " +message;
+                        ChatServer.sendMessageToUser(message, username, recipient);
                         ChatServer.insertMSG(message, recipient, username);
                     }
 
                 } else {
-                    if (!text.equals("aA11231231231Aa554432657dfght675esfd")) {
+                    if (!text.equals("e596899f114b5162402325dfb31fdaa792fabed718628336cc7a35a24f38eaa9")) {
                         logger.info("Broadcast message {} from {}", text, username);
 
                         if (text.equals("null"))
                             logger.warn("Null message received");
 
                         ChatServer.insertBCMSG(text, username);
-                        ChatServer.broadcast(username + ": " + text);
+                        ChatServer.broadcast(username, text);
                     }
                 }
-            } while (!text.equalsIgnoreCase("aA11231231231Aa554432657dfght675esfd"));
+            } while (!text.equalsIgnoreCase("e596899f114b5162402325dfb31fdaa792fabed718628336cc7a35a24f38eaa9"));
 
             socket.close();
         } catch (IOException | SQLException ex) {
@@ -225,10 +254,27 @@ class ClientHandler extends Thread {
             logger.info("Client {} disconnected", username);
         }
     }
-
-    void sendMessage(String message) {
+    void sendMessageFromServer(Message message) {
         if (writer != null) {
-            writer.println(message);
+            try {
+                Gson gson = new Gson();
+                String jsonMSG = gson.toJson(message);
+                logger.info("Send message {}", message);
+                writer.println(jsonMSG);
+            } catch (Exception e) {
+                logger.error("Error while sending message: {}", e.getMessage());
+            }
+        }
+    }
+    void sendMessage(Message message) {
+        if (writer != null) {
+            try {
+                Gson gson = new Gson();
+                String jsonMSG = gson.toJson(message);
+                writer.println(jsonMSG);
+            } catch (Exception e) {
+                logger.error("Error while sending message: {}", e.getMessage());
+            }
         }
     }
     private boolean isValidLogin(String login, String password) throws SQLException {

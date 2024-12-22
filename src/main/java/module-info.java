@@ -4,8 +4,7 @@ module org.example.semestr {
     requires org.slf4j;
     requires spring.security.crypto;
     requires java.sql;
-
-
-    opens org.example.semestr to javafx.fxml;
+    requires com.google.gson;
+    opens org.example.semestr to com.google.gson, javafx.fxml;
     exports org.example.semestr;
 }

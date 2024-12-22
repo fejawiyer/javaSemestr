@@ -1,41 +1,76 @@
 package org.example.semestr;
 
-public class Message {
-    private String type;
-    private String recipient;
-    private String donor;
-    private String text;
-    private String time;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
-    public Message(String type, String recipient, String donor, String text, String time) {
-        this.type = type;
-        this.recipient = recipient;
-        this.donor = donor;
+public class Message {
+    private String time;
+    private String username;
+    private String text;
+    private String recipient;
+    private boolean isServerMSG; // 0 - user message 1 - server message
+
+    public Message(String username, String text) {
+        this.time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        this.username = username;
         this.text = text;
+        this.recipient = null;
+        this.isServerMSG = false;
+    }
+
+    public Message(String username, String text, String recipient) {
+        this.time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        this.username = username;
+        this.text = text;
+        this.recipient = recipient;
+        this.isServerMSG = false;
+    }
+    public Message(String text) {
+        this.time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        this.username = null;
+        this.text = text;
+        this.recipient = null;
+        this.isServerMSG = true;
+    }
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
         this.time = time;
     }
 
-    public String getType() {
-        return type;
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
     }
 
     public String getRecipient() {
         return recipient;
     }
 
-    public String getDonor() {
-        return donor;
+    public void setRecipient(String recipient) {
+        this.recipient = recipient;
     }
-
-    public String getText() {
-        return text;
-    }
-    public String getTime() {
-        return time;
-    }
-
     @Override
     public String toString() {
-        return "[" + this.type + "] " + "[" + this.time + "] " + this.donor + ": " + this.text;
+        return "Message{" +
+                "time='" + time + '\'' +
+                ", username='" + username + '\'' +
+                ", text='" + text + '\'' +
+                ", recipient='" + recipient + '\'' +
+                '}';
     }
 }
+
