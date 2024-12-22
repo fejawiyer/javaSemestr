@@ -64,7 +64,13 @@ public class MainController {
 
             String loginMsg = serverReader.readLine();
 
-            if (Objects.equals(loginMsg, "false")) {
+            if (Objects.equals(loginMsg, "Incorrect login or password")) {
+                showError("Неправильный логин и/или пароль");
+                socket.close();
+                return;
+            }
+            else if (Objects.equals(loginMsg, "User already exists")) {
+                showError("Пользователь уже существует.");
                 socket.close();
                 return;
             }
@@ -92,10 +98,7 @@ public class MainController {
                     while ((serverMessage = serverReader.readLine()) != null) {
                         try {
                             Message message = gson.fromJson(serverMessage, Message.class);
-                            System.out.println(message);
-                            System.out.println(message.getText());
                             if (message.getText().startsWith("/Users")) {
-                                System.out.println("Server send /users");
                                 updateOnlineUsers(message.getText());
                             } else if (message.getText().startsWith("[private")) {
                                 addPrivateMessageToChat(message);
@@ -104,7 +107,7 @@ public class MainController {
                                 addMessageToChat(message);
                             }
                         } catch (Exception e) {
-                            showError("Ошибка. " + e.getMessage());
+                            javafx.application.Platform.runLater(() -> showError("Ошибка. " + e.getMessage()));
                         }
                     }
                 } catch (IOException ex) {
@@ -147,7 +150,7 @@ public class MainController {
                 writer.println(jsonMSG);
                 messageField.clear();
             } catch (Exception e) {
-                System.out.println("Error sending message: " + e.getMessage());
+                showError("Ошибка при отправке сообщения: " + e.getMessage());
             }
         }
     }
@@ -171,7 +174,11 @@ public class MainController {
 
     @FXML
     private void exit() {
-        writer.println("e596899f114b5162402325dfb31fdaa792fabed718628336cc7a35a24f38eaa9");
+        String message = "e596899f114b5162402325dfb31fdaa792fabed718628336cc7a35a24f38eaa9";
+        Message msg = new Message(loginField.getText(), message, null);
+        Gson gson = new Gson();
+        String jsonMSG = gson.toJson(msg);
+        writer.println(jsonMSG);
         Platform.exit();
     }
     @FXML
@@ -182,6 +189,11 @@ public class MainController {
     @FXML
     private void initialize() {
         messageField.setOnAction(event -> sendMessage());
+        Platform.runLater(() -> {
+            javafx.stage.Stage stage = (javafx.stage.Stage) messageField.getScene().getWindow();
+            stage.setOnCloseRequest(event -> {event.consume(); exit();
+            });
+        });
     }
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);

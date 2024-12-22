@@ -9,6 +9,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.google.gson.Gson;
 
@@ -57,14 +58,20 @@ public class ChatServer {
         return users;
     }
 
-    static void addUserToDB(String username, String password) {
+    static boolean addUserToDB(String username, String password) {
         try {
+            ResultSet rs = stat.executeQuery("SELECT * FROM users WHERE username = '" + username + "'");
+            if (rs.next()) {
+                logger.warn("Username '{}' already exists. Registration denied.", username);
+                throw new UserAlreadyExistsException("User with this username already exists");
+            }
             password = encoder.encode(password);
             logger.info("INSERT INTO 'users' ('username', 'password') VALUES('{}', '{}');", username, password);
             stat.execute("INSERT INTO 'users' ('username', 'password') VALUES('" + username + "', '" + password + "');");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        return true;
     }
     static void addUser(String username) {
         users.add(username);
@@ -175,7 +182,8 @@ class ClientHandler extends Thread {
 
             if(type.equals("login")) {
                 if (!isValidLogin(login, password)) {
-                    writer.println("false");
+                    logger.info("User {} try to login unsuccessfully", login);
+                    writer.println("Incorrect login or password");
                     socket.close();
                     return;
                 } else {
@@ -186,11 +194,24 @@ class ClientHandler extends Thread {
                 this.username = login;
             }
             if(type.equals("register")) {
-                writer.println("true");
-                this.writer = writer;
-                this.username = login;
-                logger.info("Register username:{}, password:{}", this.username, password);
-                ChatServer.addUserToDB(this.username, password);
+                try {
+                    this.writer = writer;
+                    this.username = login;
+                    if(ChatServer.addUserToDB(this.username, password)) {
+                        writer.println("true");
+                        logger.info("Register username:{}, password:{}", this.username, password);
+                    }
+                } catch (RuntimeException e) {
+                    logger.error("Something got wrong. {}", e.getMessage());
+                    if (e.getMessage().equals("User with this username already exists")) {
+                        writer.println("User already exists");
+                    }
+                    else {
+                        writer.println("false");
+                    }
+                    socket.close();
+                    return;
+                }
             }
             logger.info("Client connected with username {}", username);
             ChatServer.addUser(this.username);
@@ -225,7 +246,7 @@ class ClientHandler extends Thread {
 
                     if (!ChatServer.getUsers().contains(recipient)) {
                         logger.warn("Recipient {} is not exists", recipient);
-                        ChatServer.sendMessageToUser("SERVER:User " + recipient + " is not exists", username, username);
+                        ChatServer.sendMessageToUser("User " + recipient + " is not exists", "SERVER", username);
                     }
                     else {
                         message = "[private] " + username + ": " +message;
@@ -248,7 +269,7 @@ class ClientHandler extends Thread {
 
             socket.close();
         } catch (IOException | SQLException ex) {
-            System.out.println("Server exception: " + ex.getMessage());
+            logger.error("Server exception: {}", ex.getMessage());
         } finally {
             ChatServer.clientHandlers.remove(this);
             logger.info("Client {} disconnected", username);
@@ -259,10 +280,10 @@ class ClientHandler extends Thread {
             try {
                 Gson gson = new Gson();
                 String jsonMSG = gson.toJson(message);
-                logger.info("Send message {}", message);
+                logger.info("Send message from server:{}", message);
                 writer.println(jsonMSG);
             } catch (Exception e) {
-                logger.error("Error while sending message: {}", e.getMessage());
+                logger.error("Error while sending server message: {}", e.getMessage());
             }
         }
     }

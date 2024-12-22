@@ -5,6 +5,7 @@ module org.example.semestr {
     requires spring.security.crypto;
     requires java.sql;
     requires com.google.gson;
+    requires spring.security.core;
     opens org.example.semestr to com.google.gson, javafx.fxml;
     exports org.example.semestr;
 }

@@ -4,14 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="60b5f00d-2cd3-48f4-857f-79126133a4a9" name="Changes" comment="v6">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/example/semestr/DatabaseConnectionException.java" afterDir="false" />
+    <list default="true" id="60b5f00d-2cd3-48f4-857f-79126133a4a9" name="Changes" comment="v7">
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/example/semestr/UserAlreadyExistsException.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/module-info.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/module-info.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/semestr/ChatServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/semestr/ChatServer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/semestr/MainController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/semestr/MainController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/semestr/Message.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/semestr/Message.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -21,8 +19,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Exception" />
         <option value="Class" />
+        <option value="Exception" />
       </list>
     </option>
   </component>
@@ -40,12 +38,12 @@
     &quot;assignee&quot;: &quot;fejawiyer&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/fejawiyer/javaSemestr",
-    "accountId": "3f509edf-6c47-4d38-99d8-e6cd865c70e5"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/fejawiyer/javaSemestr&quot;,
+    &quot;accountId&quot;: &quot;3f509edf-6c47-4d38-99d8-e6cd865c70e5&quot;
   }
-}]]></component>
+}</component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -123,7 +121,15 @@
       <option name="project" value="LOCAL" />
       <updated>1733982999766</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="v7">
+      <option name="closed" value="true" />
+      <created>1734872805411</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1734872805411</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -141,6 +147,7 @@
     <MESSAGE value="Initial commit" />
     <MESSAGE value="v2" />
     <MESSAGE value="v3" />
-    <option name="LAST_COMMIT_MESSAGE" value="v3" />
+    <MESSAGE value="v7" />
+    <option name="LAST_COMMIT_MESSAGE" value="v7" />
   </component>
 </project>
